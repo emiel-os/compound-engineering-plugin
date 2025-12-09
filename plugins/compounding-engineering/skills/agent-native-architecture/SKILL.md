@@ -16,12 +16,26 @@ Don't artificially limit the agent. If a user could read files, write code, brow
 
 ### Features Are Prompts
 
-Each feature is a prompt that defines an outcome and gives the agent the tools it needs. The agent then figures out how to accomplish it.
+Each feature is a **prompt** that defines an outcome and gives the agent the tools it needs. The agent then figures out how to accomplish it.
 
 **Traditional:** Feature = function in codebase that agent calls
 **Prompt-native:** Feature = prompt defining desired outcome + primitive tools
 
-The agent doesn't execute your code. It uses primitives to achieve outcomes you describe.
+Features can live in one system prompt file, or be organized as separate prompt files (skills) that load when relevant. Separate files is a good pattern for modularity:
+
+```
+my-agent/
+├── prompts/
+│   ├── system.md           # Core identity and base behavior
+│   ├── feedback.md         # Feature: feedback collection
+│   ├── site-management.md  # Feature: site updates
+│   └── reporting.md        # Feature: generate reports
+└── tools/                  # Primitive tools (read, write, store, etc.)
+```
+
+Either way, adding a feature = writing a new prompt (or prompt section). No code changes.
+
+The agent doesn't execute your code. It uses primitives to achieve outcomes described in prompts.
 
 ### Tools Provide Capability, Not Behavior
 
@@ -55,6 +69,21 @@ When implementing:
 - **Deterministic requirements** - exact same output every time
 - **Cost-sensitive scenarios** - when API costs would be prohibitive
 - **High security** - though this is overblown for most apps
+
+### Framework Agnostic (Works with Any Agentic AI)
+
+These patterns work with any agent framework:
+- **Claude Agent SDK** - MCP servers as primitives, system prompt for behavior
+- **OpenAI function calling** - Functions as primitives, system message for behavior
+- **LangChain/LlamaIndex** - Tools as primitives, prompt templates for behavior
+- **Raw API calls** - Tool definitions as primitives, system prompt for behavior
+
+The Claude Agent SDK is a natural fit because:
+- **MCP servers** map directly to primitive tool servers
+- **Skills** (like this one) are the prompt layer that defines features
+- **The `query()` function** runs the agent loop with your prompts + tools
+
+But the core principle is universal: prompts define outcomes, tools provide capability, the model figures out how.
 </essential_principles>
 
 <intake>
@@ -84,19 +113,19 @@ What aspect of agent native architecture do you need help with?
 <quick_start>
 Build a prompt-native agent in three steps:
 
-**Step 1: Define primitive tools**
-```typescript
-const tools = [
-  tool("read_file", "Read any file", { path: z.string() }, ...),
-  tool("write_file", "Write any file", { path: z.string(), content: z.string() }, ...),
-  tool("list_files", "List directory", { path: z.string() }, ...),
-];
-```
+**Step 1: Define primitive tools** (capability layer)
 
-**Step 2: Write behavior in the system prompt**
+Give the agent simple, composable primitives—not workflow functions:
+- `read_file`, `write_file`, `list_files`
+- `store_item`, `list_items`, `delete_item`
+- `send_message`, `fetch_url`
+
+**Step 2: Write behavior in prompts** (feature layer)
+
 ```markdown
-## Your Responsibilities
-When asked to organize content, you should:
+## Content Organization
+
+When asked to organize content:
 1. Read existing files to understand the structure
 2. Analyze what organization makes sense
 3. Create appropriate pages using write_file
@@ -106,16 +135,24 @@ You decide the structure. Make it good.
 ```
 
 **Step 3: Let the agent work**
+
+Connect prompts + tools and let the agent figure out HOW to achieve the outcome.
+
+**Example with Claude Agent SDK:**
 ```typescript
+import { query } from "@anthropic-ai/claude-agent-sdk";
+
 query({
   prompt: userMessage,
   options: {
     systemPrompt,
-    mcpServers: { files: fileServer },
+    mcpServers: { files: fileServer, storage: storageServer },
     permissionMode: "acceptEdits",
   }
 });
 ```
+
+The same pattern works with OpenAI, LangChain, or raw API calls—prompts define outcomes, tools provide capability.
 </quick_start>
 
 <reference_index>
