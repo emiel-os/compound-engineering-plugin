@@ -65,6 +65,11 @@ What aspect of agent native architecture do you need help with?
 3. **Write system prompts** - Define agent behavior in prompts
 4. **Self-modification** - Enable agents to safely evolve themselves
 5. **Review/refactor** - Make existing code more prompt-native
+6. **Context injection** - Inject runtime app state into agent prompts
+7. **Action parity** - Ensure agents can do everything users can do
+8. **Shared workspace** - Set up agents and users in the same data space
+9. **Testing** - Test agent-native apps for capability and parity
+10. **Mobile patterns** - Handle background execution, permissions, cost
 
 **Wait for response before proceeding.**
 </intake>
@@ -77,6 +82,11 @@ What aspect of agent native architecture do you need help with?
 | 3, "prompt", "system prompt", "behavior" | Read [system-prompt-design.md](./references/system-prompt-design.md) |
 | 4, "self-modify", "evolve", "git" | Read [self-modification.md](./references/self-modification.md) |
 | 5, "review", "refactor", "existing" | Read [refactoring-to-prompt-native.md](./references/refactoring-to-prompt-native.md) |
+| 6, "context", "inject", "runtime", "dynamic" | Read [dynamic-context-injection.md](./references/dynamic-context-injection.md) |
+| 7, "parity", "ui action", "capability map" | Read [action-parity-discipline.md](./references/action-parity-discipline.md) |
+| 8, "workspace", "shared", "files", "filesystem" | Read [shared-workspace-architecture.md](./references/shared-workspace-architecture.md) |
+| 9, "test", "testing", "verify", "validate" | Read [agent-native-testing.md](./references/agent-native-testing.md) |
+| 10, "mobile", "ios", "android", "background" | Read [mobile-patterns.md](./references/mobile-patterns.md) |
 
 **After reading the reference, apply those patterns to the user's specific context.**
 </routing>
@@ -123,11 +133,19 @@ query({
 
 All references in `references/`:
 
+**Core Patterns:**
 - **Architecture:** [architecture-patterns.md](./references/architecture-patterns.md)
 - **Tool Design:** [mcp-tool-design.md](./references/mcp-tool-design.md)
 - **Prompts:** [system-prompt-design.md](./references/system-prompt-design.md)
 - **Self-Modification:** [self-modification.md](./references/self-modification.md)
 - **Refactoring:** [refactoring-to-prompt-native.md](./references/refactoring-to-prompt-native.md)
+
+**Agent-Native Disciplines:**
+- **Context Injection:** [dynamic-context-injection.md](./references/dynamic-context-injection.md)
+- **Action Parity:** [action-parity-discipline.md](./references/action-parity-discipline.md)
+- **Shared Workspace:** [shared-workspace-architecture.md](./references/shared-workspace-architecture.md)
+- **Testing:** [agent-native-testing.md](./references/agent-native-testing.md)
+- **Mobile Patterns:** [mobile-patterns.md](./references/mobile-patterns.md)
 </reference_index>
 
 <anti_patterns>
@@ -186,11 +204,58 @@ each under 20 words, formatted with em-dashes...
 // Right - define outcome, trust intelligence
 Create clear, useful summaries. Use your judgment.
 ```
+
+### Agent-Native Anti-Patterns
+
+**Context Starvation**
+Agent doesn't know what resources exist in the app.
+```
+User: "Write something about Catherine the Great in my feed"
+Agent: "What feed? I don't understand what system you're referring to."
+```
+Fix: Inject available resources, capabilities, and vocabulary into the system prompt at runtime.
+
+**Orphan Features**
+UI action with no agent equivalent.
+```swift
+// UI has a "Publish to Feed" button
+Button("Publish") { publishToFeed(insight) }
+// But no agent tool exists to do the same thing
+```
+Fix: Add corresponding tool and document in system prompt for every UI action.
+
+**Sandbox Isolation**
+Agent works in separate data space from user.
+```
+Documents/
+├── user_files/        ← User's space
+└── agent_output/      ← Agent's space (isolated)
+```
+Fix: Use shared workspace where both agent and user operate on the same files.
+
+**Silent Actions**
+Agent changes state but UI doesn't update.
+```typescript
+// Agent writes to database
+await db.insert("feed", content);
+// But UI doesn't observe this table - user sees nothing
+```
+Fix: Use shared data stores with reactive binding, or file system observation.
+
+**Capability Hiding**
+Users can't discover what agents can do.
+```
+User: "Help me with my reading"
+Agent: "What would you like help with?"
+// Agent doesn't mention it can publish to feed, research books, etc.
+```
+Fix: Include capability hints in agent responses or provide onboarding.
 </anti_patterns>
 
 <success_criteria>
 You've built a prompt-native agent when:
 
+**Core Prompt-Native Criteria:**
 - [ ] The agent figures out HOW to achieve outcomes, not just calls your functions
 - [ ] Whatever a user could do, the agent can do (no artificial limits)
 - [ ] Features are prompts that define outcomes, not code that defines workflows
@@ -198,4 +263,18 @@ You've built a prompt-native agent when:
 - [ ] Changing behavior means editing prose, not refactoring code
 - [ ] The agent can surprise you with clever approaches you didn't anticipate
 - [ ] You could add a new feature by writing a new prompt section, not new code
+
+**Agent-Native Criteria:**
+- [ ] System prompt includes dynamic context about app state (available resources, recent activity)
+- [ ] Every UI action has a corresponding agent tool (action parity)
+- [ ] Agent tools are documented in the system prompt with user vocabulary
+- [ ] Agent and user work in the same data space (shared workspace)
+- [ ] Agent actions are immediately reflected in the UI
+- [ ] The "write something to [app location]" test passes for all locations
+- [ ] Users can discover what the agent can do (capability hints)
+
+**Mobile-Specific Criteria (if applicable):**
+- [ ] Background execution handling implemented (checkpoint/resume)
+- [ ] Permission requests handled gracefully in tools
+- [ ] Cost-aware design (appropriate model tiers, batching)
 </success_criteria>
