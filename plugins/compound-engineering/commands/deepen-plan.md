@@ -293,7 +293,7 @@ mcp__plugin_compound-engineering_context7__query-docs: Query documentation for s
 
 **Use WebSearch for current best practices:**
 
-Search for recent (2024-2025) articles, blog posts, and documentation on topics in the plan.
+Search for recent (2024-2026) articles, blog posts, and documentation on topics in the plan.
 
 ### 5. Discover and Run ALL Review Agents
 
