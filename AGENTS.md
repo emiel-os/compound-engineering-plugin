@@ -7,7 +7,7 @@ This repository contains a Bun/TypeScript CLI that converts Claude Code plugins 
 - **Branching:** Create a feature branch for any non-trivial change.
 - **Safety:** Do not delete or overwrite user data. Avoid destructive commands.
 - **Testing:** Run `bun test` after changes that affect parsing, conversion, or output.
-- **Output Paths:** Keep OpenCode output at `opencode.json` and `.opencode/{agents,skill,plugin}`.
+- **Output Paths:** Keep OpenCode output at `opencode.json` and `.opencode/{agents,skills,plugins}`.
 - **ASCII-first:** Use ASCII unless the file already contains Unicode.
 
 ## Adding a New Target Provider (e.g., Codex)

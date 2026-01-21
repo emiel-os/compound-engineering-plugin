@@ -21,7 +21,7 @@ export default defineCommand({
     to: {
       type: "string",
       default: "opencode",
-      description: "Target format (opencode)",
+      description: "Target format (opencode | codex)",
     },
     output: {
       type: "string",

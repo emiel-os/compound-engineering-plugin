@@ -105,7 +105,7 @@ describe("CLI", () => {
     expect(await exists(path.join(tempRoot, "opencode.json"))).toBe(true)
   })
 
-  test("install supports --also with unimplemented target", async () => {
+  test("install supports --also with codex output", async () => {
     const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "cli-also-"))
     const fixtureRoot = path.join(import.meta.dir, "fixtures", "sample-plugin")
 
@@ -136,6 +136,8 @@ describe("CLI", () => {
     }
 
     expect(stdout).toContain("Installed sample-plugin")
-    expect(stderr).toContain("Skipping codex")
+    expect(stdout).toContain(path.join(tempRoot, "codex"))
+    expect(await exists(path.join(tempRoot, "codex", ".codex", "prompts", "command-one.md"))).toBe(true)
+    expect(await exists(path.join(tempRoot, "codex", ".codex", "skills", "skill-one", "SKILL.md"))).toBe(true)
   })
 })
