@@ -8,37 +8,93 @@ argument-hint: "[--global to configure globally]"
 
 Configure which review agents and workflows to use for this project. Creates a `.claude/compound-engineering.json` configuration file.
 
-## Detect Configuration Location
+## Step 0: Detect Existing Config & Custom Agents
 
-<config_detection>
+<detection>
 
-Check if user passed `--global` argument:
-- **If `--global`**: Configure at `~/.claude/compound-engineering.json` (applies to all projects)
-- **Otherwise**: Configure at `.claude/compound-engineering.json` (project-specific)
+### Check for existing configuration:
 
-Check if configuration already exists:
 ```bash
 # Check project config
-test -f .claude/compound-engineering.json && echo "Project config exists"
+test -f .claude/compound-engineering.json && echo "PROJECT_CONFIG_EXISTS"
 
 # Check global config
-test -f ~/.claude/compound-engineering.json && echo "Global config exists"
+test -f ~/.claude/compound-engineering.json && echo "GLOBAL_CONFIG_EXISTS"
 ```
 
-If config exists, offer to edit existing or start fresh.
+### Scan for custom local agents:
 
-</config_detection>
+```bash
+# Project-level custom agents
+ls .claude/agents/*.md 2>/dev/null | head -20
 
-## Step 1: Detect Project Type
+# Global custom agents
+ls ~/.claude/agents/*.md 2>/dev/null | head -20
 
-<project_detection>
+# Project-level custom skills (that might be reviewers)
+ls .claude/skills/*/SKILL.md 2>/dev/null | head -20
+```
 
-Detect the primary language/framework automatically:
+**For each discovered agent/skill file:**
+1. Read the file's YAML frontmatter or first few lines
+2. Extract `name` and `description`
+3. Check if name contains "review" or description mentions "code review"
+4. Store as `customAgents[]` array for later
+
+**Example discovered agents:**
+```
+Found 3 custom agents:
+- my-team-reviewer (.claude/agents/my-team-reviewer.md) - "Team-specific Rails conventions"
+- api-reviewer (.claude/agents/api-reviewer.md) - "REST API design review"
+- test-coverage-checker (~/.claude/agents/test-coverage-checker.md) - "Verify test coverage"
+```
+
+</detection>
+
+## Step 1: Determine Setup Mode (New vs Modify)
+
+<setup_mode_check>
+
+**If config already exists:**
+
+```
+AskUserQuestion:
+  questions:
+    - question: "Configuration found. What would you like to do?"
+      header: "Setup"
+      options:
+        - label: "Modify existing config"
+          description: "Add/remove agents from your current configuration"
+        - label: "Start fresh"
+          description: "Delete current config and set up from scratch"
+        - label: "View current config"
+          description: "Show what's currently configured"
+```
+
+**If "View current config":**
+1. Read and display the current `.claude/compound-engineering.json`
+2. Show which agents are configured for each category
+3. Ask again what they want to do
+
+**If "Modify existing config":** → Go to Step 2B (Modify Flow)
+
+**If "Start fresh":** → Go to Step 2A (New Setup Flow)
+
+**If no config exists:** → Go to Step 2A (New Setup Flow)
+
+</setup_mode_check>
+
+## Step 2A: New Setup Flow
+
+<new_setup>
+
+### Detect Project Type
 
 ```bash
 # Check for common project indicators
-ls -la Gemfile package.json requirements.txt pyproject.toml Cargo.toml go.mod pom.xml 2>/dev/null
-ls -la *.xcodeproj *.xcworkspace Package.swift 2>/dev/null
+ls Gemfile package.json requirements.txt pyproject.toml Cargo.toml go.mod 2>/dev/null
+test -f config/routes.rb && echo "RAILS"
+test -f tsconfig.json && echo "TYPESCRIPT"
 ```
 
 **Detection Rules:**
@@ -49,161 +105,97 @@ ls -la *.xcodeproj *.xcworkspace Package.swift 2>/dev/null
 - `requirements.txt` OR `pyproject.toml` → **Python**
 - `Cargo.toml` → **Rust**
 - `go.mod` → **Go**
-- `*.xcodeproj` OR `Package.swift` → **Swift/iOS**
-- None of the above → **General**
+- None → **General**
 
-Store detected type for recommendations.
-
-</project_detection>
-
-## Step 2: Quick vs Advanced Setup
-
-<setup_mode>
-
-Use AskUserQuestion to determine setup mode:
+### Choose Setup Mode
 
 ```
 AskUserQuestion:
   questions:
-    - question: "How would you like to configure compound-engineering?"
+    - question: "How would you like to configure review agents?"
       header: "Setup mode"
       options:
         - label: "Quick Setup (Recommended)"
-          description: "Use smart defaults based on your project type. Best for most users."
+          description: "Smart defaults for {detected_type} + any custom agents found"
         - label: "Advanced Setup"
-          description: "Manually select each agent and configure options. For power users."
+          description: "Manually select each agent including custom ones"
         - label: "Minimal Setup"
-          description: "Only essential agents (security + code quality). Fastest reviews."
+          description: "Only essential agents (security + simplicity)"
 ```
 
-</setup_mode>
+### Quick Setup - Apply Defaults + Custom Agents
 
-## Step 3A: Quick Setup Flow
+**For detected project type, use these defaults:**
 
-<quick_setup>
+| Project Type | Review Agents | Plan Review Agents |
+|--------------|---------------|-------------------|
+| Rails | kieran-rails-reviewer, dhh-rails-reviewer, code-simplicity-reviewer, security-sentinel, performance-oracle | kieran-rails-reviewer, code-simplicity-reviewer |
+| Python | kieran-python-reviewer, code-simplicity-reviewer, security-sentinel, performance-oracle | kieran-python-reviewer, code-simplicity-reviewer |
+| TypeScript | kieran-typescript-reviewer, code-simplicity-reviewer, security-sentinel, performance-oracle | kieran-typescript-reviewer, code-simplicity-reviewer |
+| General | code-simplicity-reviewer, security-sentinel, performance-oracle | code-simplicity-reviewer |
 
-If user chose "Quick Setup":
-
-### Rails Projects
-Default config:
-```json
-{
-  "projectType": "rails",
-  "reviewAgents": [
-    "kieran-rails-reviewer",
-    "dhh-rails-reviewer",
-    "code-simplicity-reviewer",
-    "security-sentinel",
-    "performance-oracle"
-  ],
-  "planReviewAgents": [
-    "kieran-rails-reviewer",
-    "code-simplicity-reviewer"
-  ],
-  "conditionalAgents": {
-    "migrations": ["data-migration-expert", "deployment-verification-agent"],
-    "frontend": ["julik-frontend-races-reviewer"],
-    "architecture": ["architecture-strategist", "pattern-recognition-specialist"]
-  }
-}
-```
-
-### Python Projects
-Default config:
-```json
-{
-  "projectType": "python",
-  "reviewAgents": [
-    "kieran-python-reviewer",
-    "code-simplicity-reviewer",
-    "security-sentinel",
-    "performance-oracle"
-  ],
-  "planReviewAgents": [
-    "kieran-python-reviewer",
-    "code-simplicity-reviewer"
-  ],
-  "conditionalAgents": {
-    "architecture": ["architecture-strategist", "pattern-recognition-specialist"]
-  }
-}
-```
-
-### TypeScript Projects
-Default config:
-```json
-{
-  "projectType": "typescript",
-  "reviewAgents": [
-    "kieran-typescript-reviewer",
-    "code-simplicity-reviewer",
-    "security-sentinel",
-    "performance-oracle"
-  ],
-  "planReviewAgents": [
-    "kieran-typescript-reviewer",
-    "code-simplicity-reviewer"
-  ],
-  "conditionalAgents": {
-    "frontend": ["julik-frontend-races-reviewer"],
-    "architecture": ["architecture-strategist", "pattern-recognition-specialist"]
-  }
-}
-```
-
-### General/Other Projects
-Default config:
-```json
-{
-  "projectType": "general",
-  "reviewAgents": [
-    "code-simplicity-reviewer",
-    "security-sentinel",
-    "performance-oracle"
-  ],
-  "planReviewAgents": [
-    "code-simplicity-reviewer"
-  ],
-  "conditionalAgents": {
-    "architecture": ["architecture-strategist", "pattern-recognition-specialist"]
-  }
-}
-```
-
-</quick_setup>
-
-## Step 3B: Advanced Setup Flow
-
-<advanced_setup>
-
-If user chose "Advanced Setup", walk through each category:
-
-### Question 1: Primary Code Review Agents
+**If custom agents were discovered:**
 
 ```
 AskUserQuestion:
   questions:
-    - question: "Which code review agents should run on every PR?"
-      header: "Review agents"
+    - question: "Found {N} custom agents. Add them to your review configuration?"
+      header: "Custom agents"
+      multiSelect: true
+      options:
+        - label: "{custom_agent_1_name}"
+          description: "{custom_agent_1_description}"
+        - label: "{custom_agent_2_name}"
+          description: "{custom_agent_2_description}"
+        - label: "Skip - don't add custom agents"
+          description: "Only use built-in agents"
+```
+
+Add selected custom agents to `reviewAgents` array.
+
+### Advanced Setup - Manual Selection
+
+**Question 1: Built-in Review Agents**
+
+```
+AskUserQuestion:
+  questions:
+    - question: "Which built-in review agents should run on every PR?"
+      header: "Built-in agents"
       multiSelect: true
       options:
         - label: "kieran-rails-reviewer"
-          description: "Rails conventions, naming, clarity (Rails projects)"
+          description: "Rails conventions, naming, clarity"
         - label: "kieran-typescript-reviewer"
           description: "TypeScript best practices, type safety"
         - label: "kieran-python-reviewer"
           description: "Python patterns, typing, best practices"
         - label: "dhh-rails-reviewer"
-          description: "Opinionated Rails style from DHH's perspective"
+          description: "Opinionated Rails style"
 ```
 
-### Question 2: Quality & Security Agents
+**Question 2: Custom Agents (if any discovered)**
+
+```
+AskUserQuestion:
+  questions:
+    - question: "Which of your custom agents should run on every PR?"
+      header: "Your agents"
+      multiSelect: true
+      options:
+        - label: "{custom_agent_1_name}"
+          description: "{custom_agent_1_description} ({path})"
+        - label: "{custom_agent_2_name}"
+          description: "{custom_agent_2_description} ({path})"
+```
+
+**Question 3: Quality & Security**
 
 ```
 AskUserQuestion:
   questions:
     - question: "Which quality and security agents should run?"
-      header: "Quality agents"
+      header: "Quality"
       multiSelect: true
       options:
         - label: "code-simplicity-reviewer (Recommended)"
@@ -212,122 +204,153 @@ AskUserQuestion:
           description: "Security vulnerabilities and OWASP compliance"
         - label: "performance-oracle"
           description: "Performance issues and optimization"
-        - label: "architecture-strategist"
-          description: "Architectural patterns and design decisions"
+        - label: "agent-native-reviewer"
+          description: "Verify features are AI-accessible"
 ```
 
-### Question 3: Plan Review Agents
-
-```
-AskUserQuestion:
-  questions:
-    - question: "Which agents should review implementation plans?"
-      header: "Plan reviewers"
-      multiSelect: true
-      options:
-        - label: "Use same as code review (Recommended)"
-          description: "Reuse your code review agent selection"
-        - label: "code-simplicity-reviewer only"
-          description: "Lightweight plan reviews focused on simplicity"
-        - label: "Custom selection"
-          description: "Choose specific agents for plan reviews"
-```
-
-### Question 4: Conditional Agents
+**Question 4: Conditional Agents**
 
 ```
 AskUserQuestion:
   questions:
-    - question: "Enable conditional agents that run based on file changes?"
-      header: "Smart agents"
+    - question: "Enable smart agents that run based on what files changed?"
+      header: "Conditional"
       multiSelect: true
       options:
         - label: "Migration agents (Recommended)"
-          description: "data-migration-expert + deployment-verification for DB changes"
+          description: "data-migration-expert for DB changes"
         - label: "Frontend agents"
-          description: "julik-frontend-races-reviewer for JS/Stimulus code"
+          description: "julik-frontend-races-reviewer for JS/TS"
         - label: "Architecture agents"
-          description: "pattern-recognition-specialist for structural changes"
-        - label: "None"
-          description: "Only run configured review agents"
+          description: "architecture-strategist for structural changes"
+        - label: "Data agents"
+          description: "data-integrity-guardian for model changes"
 ```
 
-</advanced_setup>
+</new_setup>
 
-## Step 3C: Minimal Setup Flow
+## Step 2B: Modify Existing Config
 
-<minimal_setup>
+<modify_config>
 
-If user chose "Minimal Setup":
+Read current configuration and present current state:
 
-```json
-{
-  "projectType": "{detected}",
-  "reviewAgents": [
-    "code-simplicity-reviewer",
-    "security-sentinel"
-  ],
-  "planReviewAgents": [
-    "code-simplicity-reviewer"
-  ],
-  "conditionalAgents": {}
-}
+```markdown
+## Current Configuration
+
+**Project Type:** {type}
+
+**Review Agents ({count}):**
+- ✓ kieran-rails-reviewer
+- ✓ code-simplicity-reviewer
+- ✓ security-sentinel
+- ✓ my-custom-reviewer (custom)
+
+**Plan Review Agents ({count}):**
+- ✓ kieran-rails-reviewer
+- ✓ code-simplicity-reviewer
+
+**Conditional Agents:**
+- Migrations: data-migration-expert, deployment-verification-agent
+- Frontend: julik-frontend-races-reviewer
+- Architecture: (none)
+- Data: (none)
 ```
-
-</minimal_setup>
-
-## Step 4: Additional Options
-
-<additional_options>
-
-For all setup modes, ask:
 
 ```
 AskUserQuestion:
   questions:
-    - question: "Include agent-native-reviewer to verify features are accessible to AI agents?"
-      header: "Agent-native"
+    - question: "What would you like to modify?"
+      header: "Modify"
       options:
-        - label: "Yes (Recommended)"
-          description: "Ensures new features can be used by Claude and other AI tools"
-        - label: "No"
-          description: "Skip agent accessibility checks"
+        - label: "Add agents"
+          description: "Add more agents to your configuration"
+        - label: "Remove agents"
+          description: "Remove agents you don't want"
+        - label: "Change conditional agents"
+          description: "Modify which agents run for specific file types"
+        - label: "Done"
+          description: "Save and exit"
 ```
 
-If "Yes", add `"agent-native-reviewer"` to reviewAgents.
+### Add Agents Flow
 
-</additional_options>
+Show agents NOT currently in config:
 
-## Step 5: Write Configuration
+```
+AskUserQuestion:
+  questions:
+    - question: "Select agents to ADD to your configuration:"
+      header: "Add agents"
+      multiSelect: true
+      options:
+        - label: "dhh-rails-reviewer"
+          description: "Opinionated Rails style (not currently enabled)"
+        - label: "performance-oracle"
+          description: "Performance issues (not currently enabled)"
+        - label: "{new_custom_agent}"
+          description: "Your custom agent (discovered in .claude/agents/)"
+```
+
+### Remove Agents Flow
+
+Show agents currently IN config:
+
+```
+AskUserQuestion:
+  questions:
+    - question: "Select agents to REMOVE from your configuration:"
+      header: "Remove agents"
+      multiSelect: true
+      options:
+        - label: "kieran-rails-reviewer"
+          description: "Currently enabled - will be removed"
+        - label: "security-sentinel"
+          description: "Currently enabled - will be removed"
+```
+
+After each modification, loop back to "What would you like to modify?" until user selects "Done".
+
+</modify_config>
+
+## Step 3: Write Configuration
 
 <write_config>
 
-Create the configuration file:
+**Determine target path:**
+- If `--global`: `~/.claude/compound-engineering.json`
+- Otherwise: `.claude/compound-engineering.json`
 
+**Create directory if needed:**
 ```bash
-# Ensure .claude directory exists
-mkdir -p .claude
-
-# Write configuration (or to ~/.claude/ if --global)
+mkdir -p .claude  # or ~/.claude for global
 ```
 
-Write the JSON configuration:
+**Write JSON configuration:**
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/EveryInc/compound-engineering-plugin/main/schemas/compound-engineering.schema.json",
   "version": "1.0",
   "projectType": "{detected_type}",
   "reviewAgents": [
-    // Selected agents
+    "kieran-rails-reviewer",
+    "code-simplicity-reviewer",
+    "security-sentinel",
+    "my-custom-reviewer"
   ],
   "planReviewAgents": [
-    // Selected agents
+    "kieran-rails-reviewer",
+    "code-simplicity-reviewer"
   ],
+  "customAgents": {
+    "my-custom-reviewer": ".claude/agents/my-custom-reviewer.md",
+    "api-reviewer": "~/.claude/agents/api-reviewer.md"
+  },
   "conditionalAgents": {
     "migrations": ["data-migration-expert", "deployment-verification-agent"],
     "frontend": ["julik-frontend-races-reviewer"],
-    "architecture": ["architecture-strategist", "pattern-recognition-specialist"]
+    "architecture": ["architecture-strategist", "pattern-recognition-specialist"],
+    "data": ["data-integrity-guardian"]
   },
   "options": {
     "agentNative": true,
@@ -336,89 +359,109 @@ Write the JSON configuration:
 }
 ```
 
+**Note:** The `customAgents` object maps custom agent names to their file paths, so workflows know where to find them.
+
 </write_config>
 
-## Step 6: Confirm and Summarize
+## Step 4: Summary
 
 <summary>
 
-Present the configuration summary:
-
 ```markdown
-## Configuration Complete
+## Configuration Complete!
 
-**Location:** `.claude/compound-engineering.json`
-**Project Type:** {type}
+**Saved to:** `.claude/compound-engineering.json`
+**Project Type:** Rails
 
 ### Review Agents (run on every PR)
-- {agent1}
-- {agent2}
-- ...
+**Built-in:**
+- kieran-rails-reviewer
+- code-simplicity-reviewer
+- security-sentinel
+
+**Custom:**
+- my-custom-reviewer (.claude/agents/)
 
 ### Plan Review Agents
-- {agent1}
-- ...
+- kieran-rails-reviewer
+- code-simplicity-reviewer
 
-### Conditional Agents
-- **Migrations:** {agents or "disabled"}
-- **Frontend:** {agents or "disabled"}
-- **Architecture:** {agents or "disabled"}
-
-### Options
-- Agent-native reviews: {enabled/disabled}
-- Parallel reviews: {enabled/disabled}
+### Conditional Agents (run when relevant files change)
+| Trigger | Agents |
+|---------|--------|
+| DB Migrations | data-migration-expert, deployment-verification-agent |
+| Frontend (JS/TS) | julik-frontend-races-reviewer |
+| Architecture | architecture-strategist |
+| Data/Models | data-integrity-guardian |
 
 ---
 
-**Next steps:**
+**What's next:**
 1. Run `/workflows:review` to test your configuration
-2. Run `/compound-engineering-setup` again to modify settings
+2. Run `/compound-engineering-setup` to modify settings anytime
 3. Commit `.claude/compound-engineering.json` to share with your team
+
+**Add more custom agents:**
+Create `.claude/agents/my-agent.md` with your custom review logic,
+then re-run `/compound-engineering-setup` to add it to your config.
 ```
 
 </summary>
 
-## Configuration File Reference
+## Creating Custom Agents
 
-<config_reference>
+<custom_agents_guide>
 
-### Full Schema
+To create your own review agent that gets auto-discovered:
 
-```json
-{
-  "$schema": "https://raw.githubusercontent.com/EveryInc/compound-engineering-plugin/main/schemas/compound-engineering.schema.json",
-  "version": "1.0",
-  "projectType": "rails|python|typescript|javascript|rust|go|swift|general",
+### 1. Create the agent file
 
-  "reviewAgents": [
-    "kieran-rails-reviewer",
-    "dhh-rails-reviewer",
-    "code-simplicity-reviewer",
-    "security-sentinel",
-    "performance-oracle"
-  ],
+**Project-level:** `.claude/agents/my-reviewer.md`
+**Global:** `~/.claude/agents/my-reviewer.md`
 
-  "planReviewAgents": [
-    "kieran-rails-reviewer",
-    "code-simplicity-reviewer"
-  ],
+### 2. Use this template:
 
-  "conditionalAgents": {
-    "migrations": ["data-migration-expert", "deployment-verification-agent"],
-    "frontend": ["julik-frontend-races-reviewer"],
-    "architecture": ["architecture-strategist", "pattern-recognition-specialist"],
-    "data": ["data-integrity-guardian"]
-  },
+```markdown
+---
+name: my-team-reviewer
+description: Reviews code for our team's specific conventions
+---
 
-  "options": {
-    "agentNative": true,
-    "parallelReviews": true,
-    "autoFix": false
-  }
-}
+# My Team Reviewer
+
+You are a code reviewer specializing in our team's conventions.
+
+## Review Checklist
+
+- [ ] Check naming conventions match our style guide
+- [ ] Verify error handling follows our patterns
+- [ ] Ensure logging is consistent
+- [ ] Check for proper documentation
+
+## When reviewing, focus on:
+
+1. **Naming**: We use snake_case for methods, PascalCase for classes
+2. **Errors**: All errors should be logged with context
+3. **Tests**: Every public method needs a test
+
+## Output format
+
+Provide findings as a bulleted list with file:line references.
 ```
 
-### Available Agents
+### 3. Re-run setup
+
+```bash
+/compound-engineering-setup
+```
+
+Your agent will be discovered and offered as an option!
+
+</custom_agents_guide>
+
+## Available Built-in Agents
+
+<available_agents>
 
 **Code Review (language-specific):**
 - `kieran-rails-reviewer` - Rails conventions and best practices
@@ -432,25 +475,12 @@ Present the configuration summary:
 - `performance-oracle` - Performance optimization
 - `architecture-strategist` - Architectural patterns
 - `pattern-recognition-specialist` - Code patterns and anti-patterns
+- `agent-native-reviewer` - AI accessibility verification
 
-**Specialized:**
+**Specialized (conditional):**
 - `data-migration-expert` - Database migration safety
 - `deployment-verification-agent` - Deployment checklists
 - `data-integrity-guardian` - Data model integrity
 - `julik-frontend-races-reviewer` - JavaScript race conditions
-- `agent-native-reviewer` - AI accessibility
 
-</config_reference>
-
-## Fallback Behavior
-
-<fallback>
-
-If no configuration file exists when running `/workflows:review` or `/plan_review`:
-
-1. Check for `.claude/compound-engineering.json`
-2. Check for `~/.claude/compound-engineering.json`
-3. If neither exists, prompt: "No configuration found. Run `/compound-engineering-setup` to configure agents, or use defaults?"
-4. If user chooses defaults, use the General project defaults
-
-</fallback>
+</available_agents>

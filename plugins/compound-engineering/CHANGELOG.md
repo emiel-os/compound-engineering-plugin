@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Three setup modes: Quick (smart defaults), Advanced (manual selection), Minimal
   - Creates `.claude/compound-engineering.json` config file
   - Supports global config (`~/.claude/`) or project-specific (`.claude/`)
+  - **Custom agent discovery**: Auto-detects agents in `.claude/agents/` and `~/.claude/agents/`
+  - **Modify flow**: Re-run setup to add/remove agents from existing config
+  - **Custom agent guide**: Instructions for creating your own review agents
 
 ### Changed
 
@@ -28,12 +31,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 New config file format (`.claude/compound-engineering.json`):
 ```json
 {
+  "version": "1.0",
   "projectType": "rails",
-  "reviewAgents": ["kieran-rails-reviewer", "code-simplicity-reviewer", "security-sentinel"],
+  "reviewAgents": ["kieran-rails-reviewer", "code-simplicity-reviewer", "my-custom-reviewer"],
   "planReviewAgents": ["kieran-rails-reviewer", "code-simplicity-reviewer"],
+  "customAgents": {
+    "my-custom-reviewer": ".claude/agents/my-custom-reviewer.md"
+  },
   "conditionalAgents": {
     "migrations": ["data-migration-expert", "deployment-verification-agent"],
-    "frontend": ["julik-frontend-races-reviewer"]
+    "frontend": ["julik-frontend-races-reviewer"],
+    "architecture": ["architecture-strategist"],
+    "data": ["data-integrity-guardian"]
   }
 }
 ```
