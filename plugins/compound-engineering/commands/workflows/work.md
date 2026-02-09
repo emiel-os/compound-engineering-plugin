@@ -175,22 +175,16 @@ This command takes a work document (plan, specification, or todo file) and execu
 
 2. **Consider Reviewer Agents** (Optional)
 
-   Use for complex, risky, or large changes:
+   Use for complex, risky, or large changes. Read agents from `.claude/compound-engineering.local.md` frontmatter (`review_agents`). If no settings file, auto-detect project type and use defaults:
 
-   - **code-simplicity-reviewer**: Check for unnecessary complexity
-   - **kieran-rails-reviewer**: Verify Rails conventions (Rails projects)
-   - **performance-oracle**: Check for performance issues
-   - **security-sentinel**: Scan for security vulnerabilities
-   - **cora-test-reviewer**: Review test quality (Rails projects with comprehensive test coverage)
+   - **Rails**: kieran-rails-reviewer, code-simplicity-reviewer
+   - **Python**: kieran-python-reviewer, code-simplicity-reviewer
+   - **TypeScript**: kieran-typescript-reviewer, code-simplicity-reviewer
+   - **General**: code-simplicity-reviewer, security-sentinel
 
-   Run reviewers in parallel with Task tool:
+   Run configured agents in parallel with Task tool. Present findings and address critical issues.
 
-   ```
-   Task(code-simplicity-reviewer): "Review changes for simplicity"
-   Task(kieran-rails-reviewer): "Check Rails conventions"
-   ```
-
-   Present findings to user and address critical issues.
+   Run `/compound-engineering-setup` to configure which agents to use.
 
 3. **Final Validation**
    - All TodoWrite tasks marked completed

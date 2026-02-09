@@ -59,25 +59,31 @@ The following paths are compound-engineering pipeline artifacts and must never b
 If a review agent flags any file in these directories for cleanup or removal, discard that finding during synthesis. Do not create a todo for it.
 </protected_artifacts>
 
+#### Load Review Agents
+
+Read `.claude/compound-engineering.local.md` (project-level) or `~/.claude/compound-engineering.local.md` (global fallback). If found, use `review_agents` from YAML frontmatter. If the markdown body contains review context, pass it to each agent as additional instructions.
+
+If no settings file exists, auto-detect project type and use defaults:
+
+- **Rails** (Gemfile + config/routes.rb): kieran-rails-reviewer, dhh-rails-reviewer, code-simplicity-reviewer, security-sentinel, performance-oracle
+- **Python** (pyproject.toml or requirements.txt): kieran-python-reviewer, code-simplicity-reviewer, security-sentinel, performance-oracle
+- **TypeScript** (tsconfig.json): kieran-typescript-reviewer, code-simplicity-reviewer, security-sentinel, performance-oracle
+- **General**: code-simplicity-reviewer, security-sentinel, performance-oracle
+
+Run `/compound-engineering-setup` to create a settings file with defaults.
+
 #### Parallel Agents to review the PR:
 
 <parallel_tasks>
 
-Run ALL or most of these agents at the same time:
+Run all configured review agents in parallel using Task tool. For each agent in the `review_agents` list:
 
-1. Task kieran-rails-reviewer(PR content)
-2. Task dhh-rails-reviewer(PR title)
-3. If turbo is used: Task rails-turbo-expert(PR content)
-4. Task git-history-analyzer(PR content)
-5. Task dependency-detective(PR content)
-6. Task pattern-recognition-specialist(PR content)
-7. Task architecture-strategist(PR content)
-8. Task code-philosopher(PR content)
-9. Task security-sentinel(PR content)
-10. Task performance-oracle(PR content)
-11. Task devops-harmony-analyst(PR content)
-12. Task data-integrity-guardian(PR content)
-13. Task agent-native-reviewer(PR content) - Verify new features are agent-accessible
+```
+Task {agent-name}(PR content + review context from settings body)
+```
+
+Additionally, always run:
+- Task agent-native-reviewer(PR content) - Verify new features are agent-accessible
 
 </parallel_tasks>
 
@@ -87,19 +93,20 @@ Run ALL or most of these agents at the same time:
 
 These agents are run ONLY when the PR matches specific criteria. Check the PR files list to determine if they apply:
 
-**If PR contains database migrations (db/migrate/*.rb files) or data backfills:**
+**MIGRATIONS: If PR contains database migrations, schema.rb, or data backfills:**
 
-14. Task data-migration-expert(PR content) - Validates ID mappings match production, checks for swapped values, verifies rollback safety
-15. Task deployment-verification-agent(PR content) - Creates Go/No-Go deployment checklist with SQL verification queries
+- Task schema-drift-detector(PR content) - Detects unrelated schema.rb changes by cross-referencing against included migrations (run FIRST)
+- Task data-migration-expert(PR content) - Validates ID mappings match production, checks for swapped values, verifies rollback safety
+- Task deployment-verification-agent(PR content) - Creates Go/No-Go deployment checklist with SQL verification queries
 
-**When to run migration agents:**
-- PR includes files matching `db/migrate/*.rb`
+**When to run:**
+- PR includes files matching `db/migrate/*.rb` or `db/schema.rb`
 - PR modifies columns that store IDs, enums, or mappings
 - PR includes data backfill scripts or rake tasks
-- PR changes how data is read/written (e.g., changing from FK to string column)
 - PR title/body mentions: migration, backfill, data transformation, ID mapping
 
 **What these agents check:**
+- `schema-drift-detector`: Cross-references schema.rb changes against PR migrations to catch unrelated columns/indexes from local database state
 - `data-migration-expert`: Verifies hard-coded mappings match production reality (prevents swapped IDs), checks for orphaned associations, validates dual-write patterns
 - `deployment-verification-agent`: Produces executable pre/post-deploy checklists with SQL queries, rollback procedures, and monitoring plans
 
