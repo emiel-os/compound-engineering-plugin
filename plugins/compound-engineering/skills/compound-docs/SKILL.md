@@ -277,6 +277,9 @@ What's next?
 5. Create new skill - Extract into new learning skill
 6. View documentation - See what was captured
 7. Other
+8. Add to known-pitfalls.md - Add a row to _system/reference/known-pitfalls.md
+9. Create Linear issue - Create a tracking issue in Linear
+10. Update CLAUDE.md - Add a rule or pattern to .claude/CLAUDE.md
 ```
 
 **Handle responses:**
@@ -495,6 +498,9 @@ What's next?
 5. Create new skill - Extract into new learning skill
 6. View documentation - See what was captured
 7. Other
+8. Add to known-pitfalls.md - Add a row to _system/reference/known-pitfalls.md
+9. Create Linear issue - Create a tracking issue in Linear
+10. Update CLAUDE.md - Add a rule or pattern to .claude/CLAUDE.md
 ```
 
 ---

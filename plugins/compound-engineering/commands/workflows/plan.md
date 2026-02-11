@@ -45,6 +45,16 @@ ls -la docs/brainstorms/*.md 2>/dev/null | head -10
 **If multiple brainstorms could match:**
 Use **AskUserQuestion tool** to ask which brainstorm to use, or whether to proceed without one.
 
+**Check for existing PRDs:**
+
+Before proceeding, check for relevant PRDs:
+
+```bash
+ls -la prds/active/*.md prds/draft/*.md 2>/dev/null | head -10
+```
+
+If a relevant PRD exists, announce it and use it as context for planning.
+
 **If no brainstorm found (or not relevant), run idea refinement:**
 
 Refine the idea through collaborative dialogue using the **AskUserQuestion tool**:
@@ -503,6 +513,7 @@ After writing the plan file, use the **AskUserQuestion tool** to present these o
 5. **Start `/workflows:work`** - Begin implementing this plan locally
 6. **Start `/workflows:work` on remote** - Begin implementing in Claude Code on the web (use `&` to run in background)
 7. **Create Issue** - Create issue in project tracker (GitHub/Linear)
+8. **Create Linear issue** - Create a Linear issue from this plan (uses Linear MCP + index.yaml)
 
 Based on selection:
 - **Open plan in editor** → Run `open docs/plans/<plan_filename>.md` to open the file in the user's default editor
@@ -512,6 +523,7 @@ Based on selection:
 - **`/workflows:work`** → Call the /workflows:work command with the plan file path
 - **`/workflows:work` on remote** → Run `/workflows:work docs/plans/<plan_filename>.md &` to start work in background for Claude Code web
 - **Create Issue** → See "Issue Creation" section below
+- **Create Linear issue** → Read `_system/integrations/linear/index.yaml` for team/project IDs, then use Linear MCP `create_issue` with the plan content
 - **Other** (automatically provided) → Accept free text for rework or specific changes
 
 **Note:** If running `/workflows:plan` with ultrathink enabled, automatically run `/deepen-plan` after plan creation for maximum depth and grounding.

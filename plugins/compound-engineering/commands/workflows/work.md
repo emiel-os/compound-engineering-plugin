@@ -56,7 +56,7 @@ This command takes a work document (plan, specification, or todo file) and execu
    ```
    Use a meaningful name based on the work (e.g., `feat/user-authentication`, `fix/email-validation`).
 
-   **Option B: Use a worktree (recommended for parallel development)**
+   **Option B: Use a worktree (default — required for team work)**
    ```bash
    skill: git-worktree
    # The skill will create a new branch from the default branch in an isolated worktree
@@ -67,10 +67,12 @@ This command takes a work document (plan, specification, or todo file) and execu
    - Only proceed after user explicitly says "yes, commit to [default_branch]"
    - Never commit directly to the default branch without explicit permission
 
-   **Recommendation**: Use worktree if:
-   - You want to work on multiple features simultaneously
-   - You want to keep the default branch clean while experimenting
-   - You plan to switch between branches frequently
+   **Default**: Worktree mode is the default. Use standard branch only for solo work on small changes.
+
+   **Branch and commit conventions:**
+   - Branch naming: `feat/m<n>-<description>` (e.g., `feat/m1-workspace-setup`)
+   - Commit format: `feat: M<n> <description> — <what was done>`
+   - See CONTRIBUTING.md for full conventions
 
 3. **Create Todo List**
    - Use TodoWrite to break plan into actionable tasks
@@ -178,16 +180,13 @@ This command takes a work document (plan, specification, or todo file) and execu
    Use for complex, risky, or large changes:
 
    - **code-simplicity-reviewer**: Check for unnecessary complexity
-   - **kieran-rails-reviewer**: Verify Rails conventions (Rails projects)
    - **performance-oracle**: Check for performance issues
    - **security-sentinel**: Scan for security vulnerabilities
-   - **cora-test-reviewer**: Review test quality (Rails projects with comprehensive test coverage)
 
    Run reviewers in parallel with Task tool:
 
    ```
    Task(code-simplicity-reviewer): "Review changes for simplicity"
-   Task(kieran-rails-reviewer): "Check Rails conventions"
    ```
 
    Present findings to user and address critical issues.
@@ -221,6 +220,11 @@ This command takes a work document (plan, specification, or todo file) and execu
    EOF
    )"
    ```
+
+1.5. **Update PRD milestone status**
+   If working from a PRD with milestones, update the milestone status:
+   - Mark milestone as DONE with commit hash and date in the PRD file
+   - Update `prds/CF-PROJECT-MASTER.md` if architecture changed
 
 2. **Capture and Upload Screenshots for UI Changes** (REQUIRED for any UI work)
 

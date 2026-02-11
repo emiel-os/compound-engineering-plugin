@@ -65,19 +65,19 @@ If a review agent flags any file in these directories for cleanup or removal, di
 
 Run ALL or most of these agents at the same time:
 
-1. Task kieran-rails-reviewer(PR content)
-2. Task dhh-rails-reviewer(PR title)
-3. If turbo is used: Task rails-turbo-expert(PR content)
-4. Task git-history-analyzer(PR content)
-5. Task dependency-detective(PR content)
-6. Task pattern-recognition-specialist(PR content)
-7. Task architecture-strategist(PR content)
-8. Task code-philosopher(PR content)
-9. Task security-sentinel(PR content)
-10. Task performance-oracle(PR content)
-11. Task devops-harmony-analyst(PR content)
-12. Task data-integrity-guardian(PR content)
-13. Task agent-native-reviewer(PR content) - Verify new features are agent-accessible
+1. Task kieran-typescript-reviewer(PR content)
+2. Task git-history-analyzer(PR content)
+3. Task pattern-recognition-specialist(PR content)
+4. Task architecture-strategist(PR content)
+5. Task code-simplicity-reviewer(PR content)
+6. Task security-sentinel(PR content)
+7. Task performance-oracle(PR content)
+8. Task data-integrity-guardian(PR content)
+9. Task agent-native-reviewer(PR content)
+10. Task supabase-reviewer(PR content)
+11. Task accessibility-reviewer(PR content)
+12. Task docker-infra-reviewer(PR content)
+13. Task crossfunction-conventions-reviewer(PR content)
 
 </parallel_tasks>
 
@@ -379,12 +379,19 @@ After creating all todo files, present comprehensive summary:
 
 ### Review Agents Used:
 
-- kieran-rails-reviewer
+- kieran-typescript-reviewer
+- git-history-analyzer
+- pattern-recognition-specialist
+- architecture-strategist
+- code-simplicity-reviewer
 - security-sentinel
 - performance-oracle
-- architecture-strategist
+- data-integrity-guardian
 - agent-native-reviewer
-- [other agents]
+- supabase-reviewer
+- accessibility-reviewer
+- docker-infra-reviewer
+- crossfunction-conventions-reviewer
 
 ### Next Steps:
 
@@ -445,9 +452,7 @@ After creating all todo files, present comprehensive summary:
 
 | Indicator | Project Type |
 |-----------|--------------|
-| `*.xcodeproj`, `*.xcworkspace`, `Package.swift` (iOS) | iOS/macOS |
-| `Gemfile`, `package.json`, `app/views/*`, `*.html.*` | Web |
-| Both iOS files AND web files | Hybrid (test both) |
+| `package.json`, `*.tsx`, `*.ts`, `vite.config.*` | Web |
 
 </detect_project_type>
 
@@ -460,22 +465,6 @@ After presenting the Summary Report, offer appropriate testing based on project 
 **"Want to run browser tests on the affected pages?"**
 1. Yes - run `/test-browser`
 2. No - skip
-```
-
-**For iOS Projects:**
-```markdown
-**"Want to run Xcode simulator tests on the app?"**
-1. Yes - run `/xcode-test`
-2. No - skip
-```
-
-**For Hybrid Projects (e.g., Rails + Hotwire Native):**
-```markdown
-**"Want to run end-to-end tests?"**
-1. Web only - run `/test-browser`
-2. iOS only - run `/xcode-test`
-3. Both - run both commands
-4. No - skip
 ```
 
 </offer_testing>
@@ -498,27 +487,6 @@ The subagent will:
 7. Fix and retry until all tests pass
 
 **Standalone:** `/test-browser [PR number]`
-
-#### If User Accepts iOS Testing:
-
-Spawn a subagent to run Xcode tests (preserves main context):
-
-```
-Task general-purpose("Run /xcode-test for scheme [name]. Build for simulator, install, launch, take screenshots, check for crashes.")
-```
-
-The subagent will:
-1. Verify XcodeBuildMCP is installed
-2. Discover project and schemes
-3. Build for iOS Simulator
-4. Install and launch app
-5. Take screenshots of key screens
-6. Capture console logs for errors
-7. Pause for human verification (Sign in with Apple, push, IAP)
-8. Create P1 todos for any failures
-9. Fix and retry until all tests pass
-
-**Standalone:** `/xcode-test [scheme]`
 
 ### Important: P1 Findings Block Merge
 

@@ -1,15 +1,17 @@
-# CORA Documentation Schema
+# Crossfunction Documentation Schema
 # This schema MUST be validated before writing any documentation file
 
 required_fields:
   module:
     type: string
-    description: "Module/area of CORA (e.g., 'Email Processing', 'Brief System', 'Authentication')"
+    description: "Module/area of Crossfunction (e.g., 'Client GUI', 'RAG Pipeline', 'Edge Functions')"
     examples:
-      - "Email Processing"
-      - "Brief System"
-      - "Assistant"
-      - "Authentication"
+      - "Client GUI"
+      - "RAG Pipeline"
+      - "Edge Functions"
+      - "Agent Platform"
+      - "PMM Pipeline"
+      - "Docker Infrastructure"
 
   date:
     type: string
@@ -19,42 +21,58 @@ required_fields:
   problem_type:
     type: enum
     values:
-      - build_error          # Rails, bundle, compilation errors
-      - test_failure         # Test failures, flaky tests
-      - runtime_error        # Exceptions, crashes during execution
-      - performance_issue    # Slow queries, memory issues, N+1 queries
-      - database_issue       # Migration, query, schema problems
-      - security_issue       # Authentication, authorization, XSS, SQL injection
-      - ui_bug               # Frontend, Stimulus, Turbo issues
-      - integration_issue    # External service, API integration problems
-      - logic_error          # Business logic bugs
-      - developer_experience # DX issues: workflow, tooling, seed data, dev setup
-      - workflow_issue       # Development process, missing steps, unclear practices
-      - best_practice        # Documenting patterns and practices to follow
-      - documentation_gap    # Missing or inadequate documentation
+      - build_error
+      - test_failure
+      - runtime_error
+      - performance_issue
+      - database_issue
+      - security_issue
+      - ui_bug
+      - integration_issue
+      - logic_error
+      - developer_experience
+      - workflow_issue
+      - best_practice
+      - documentation_gap
+      - mcp_tool_issue
+      - edge_function_error
+      - rls_policy_issue
+      - docker_config_issue
+      - agent_prompt_issue
+      - skill_execution_error
+      - env_var_issue
+      - schema_drift
+      - pipeline_failure
     description: "Primary category of the problem"
 
   component:
     type: enum
     values:
-      - rails_model          # ActiveRecord models
-      - rails_controller     # ActionController
-      - rails_view           # ERB templates, ViewComponent
-      - service_object       # Custom service classes
-      - background_job       # Sidekiq, Active Job
-      - database             # PostgreSQL, migrations, schema
-      - frontend_stimulus    # Stimulus JS controllers
-      - hotwire_turbo        # Turbo Streams, Turbo Drive
-      - email_processing     # Email handling, mailers
-      - brief_system         # Brief generation, summarization
-      - assistant            # AI assistant, prompts
-      - authentication       # Devise, user auth
-      - payments             # Stripe, billing
-      - development_workflow # Dev process, seed data, tooling
-      - testing_framework    # Test setup, fixtures, VCR
-      - documentation        # README, guides, inline docs
-      - tooling              # Scripts, generators, CLI tools
-    description: "CORA component involved"
+      - react_component
+      - react_hook
+      - react_context
+      - react_page
+      - tanstack_query
+      - supabase_edge_function
+      - supabase_migration
+      - supabase_rls_policy
+      - supabase_rpc
+      - rag_service
+      - mcp_server
+      - mcp_tool
+      - agent_config
+      - skill_prompt
+      - docker_config
+      - docker_compose
+      - ci_workflow
+      - nginx_config
+      - linear_integration
+      - apify_integration
+      - firecrawl_integration
+      - mkdocs_site
+      - knowledge_pipeline
+      - signal_extraction
+    description: "Crossfunction component involved"
 
   symptoms:
     type: array[string]
@@ -62,61 +80,97 @@ required_fields:
     max_items: 5
     description: "Observable symptoms (error messages, visual issues, crashes)"
     examples:
-      - "N+1 query detected in brief generation"
-      - "Brief emails not appearing in summary"
-      - "Turbo Stream response returns 404"
+      - "Edge Function returns empty JSONB for positioning data"
+      - "VITE_SUPABASE_URL is undefined at runtime in Docker"
+      - "RAG query returns zero-vector results"
 
   root_cause:
     type: enum
     values:
-      - missing_association  # Incorrect Rails associations
-      - missing_include      # Missing eager loading (N+1)
-      - missing_index        # Database performance issue
-      - wrong_api            # Using deprecated/incorrect Rails API
-      - scope_issue          # Incorrect query scope or filtering
-      - thread_violation     # Real-time unsafe operation
-      - async_timing         # Async/background job timing
-      - memory_leak          # Memory leak or excessive allocation
-      - config_error         # Configuration or environment issue
-      - logic_error          # Algorithm/business logic bug
-      - test_isolation       # Test isolation or fixture issue
-      - missing_validation   # Missing model validation
-      - missing_permission   # Authorization check missing
-      - missing_workflow_step # Skipped or undocumented workflow step
-      - inadequate_documentation # Missing or unclear documentation
-      - missing_tooling      # Lacking helper scripts or automation
-      - incomplete_setup     # Missing seed data, fixtures, or config
+      - missing_rls_policy
+      - schema_drift
+      - env_var_missing
+      - env_var_wrong_location
+      - mcp_config_error
+      - docker_network_issue
+      - cors_issue
+      - vite_env_not_in_all_three
+      - edge_function_schema_mismatch
+      - stale_linear_index
+      - alpine_ipv6_resolution
+      - missing_mkdocs_nav_entry
+      - kitchen_sink_commit
+      - worktree_not_isolated
+      - missing_association
+      - missing_index
+      - wrong_api
+      - scope_issue
+      - async_timing
+      - memory_leak
+      - config_error
+      - logic_error
+      - test_isolation
+      - missing_validation
+      - missing_permission
+      - missing_workflow_step
+      - inadequate_documentation
+      - missing_tooling
+      - incomplete_setup
     description: "Fundamental cause of the problem"
 
   resolution_type:
     type: enum
     values:
-      - code_fix             # Fixed by changing source code
-      - migration            # Fixed by database migration
-      - config_change        # Fixed by changing configuration
-      - test_fix             # Fixed by correcting tests
-      - dependency_update    # Fixed by updating gem/dependency
-      - environment_setup    # Fixed by environment configuration
-      - workflow_improvement # Improved development workflow or process
-      - documentation_update # Added or updated documentation
-      - tooling_addition     # Added helper script or automation
-      - seed_data_update     # Updated db/seeds.rb or fixtures
+      - code_fix
+      - migration
+      - config_change
+      - test_fix
+      - dependency_update
+      - environment_setup
+      - workflow_improvement
+      - documentation_update
+      - tooling_addition
+      - rls_policy_fix
+      - edge_function_fix
+      - docker_config_fix
+      - agent_prompt_fix
+      - skill_update
+      - env_var_fix
+      - schema_alignment
+      - linear_index_refresh
+      - mkdocs_nav_update
+      - claude_md_update
     description: "Type of fix applied"
 
   severity:
     type: enum
     values:
-      - critical             # Blocks production or development (build fails, data loss)
-      - high                 # Impairs core functionality (feature broken, security issue)
-      - medium               # Affects specific feature (UI broken, performance impact)
-      - low                  # Minor issue or edge case
+      - critical
+      - high
+      - medium
+      - low
     description: "Impact severity"
 
 optional_fields:
-  rails_version:
+  supabase_table:
     type: string
-    pattern: '^\d+\.\d+\.\d+$'
-    description: "Rails version where this was encountered (e.g., '7.1.0')"
+    description: "Supabase table involved (e.g., 'pmm_positioning_anchors')"
+
+  edge_function:
+    type: string
+    description: "Edge Function name (e.g., 'generate-positioning')"
+
+  linear_issue:
+    type: string
+    description: "Linear issue identifier (e.g., 'CF-123')"
+
+  adr_reference:
+    type: string
+    description: "Related ADR (e.g., 'ADR-018')"
+
+  prd_reference:
+    type: string
+    description: "Related PRD (e.g., 'PRD-ONESEC-FIRST-ACCOUNT')"
 
   related_components:
     type: array[string]
@@ -127,13 +181,13 @@ optional_fields:
     max_items: 8
     description: "Searchable keywords (lowercase, hyphen-separated)"
     examples:
-      - "n-plus-one"
-      - "eager-loading"
-      - "test-isolation"
-      - "turbo-stream"
+      - "supabase"
+      - "docker"
+      - "rls-policy"
+      - "edge-function"
 
 validation_rules:
-  - "module must be a valid CORA module name"
+  - "module must be a valid Crossfunction module name"
   - "date must be in YYYY-MM-DD format"
   - "problem_type must match one of the enum values"
   - "component must match one of the enum values"
@@ -145,32 +199,20 @@ validation_rules:
 
 # Example valid front matter:
 # ---
-# module: Email Processing
-# date: 2025-11-12
-# problem_type: performance_issue
-# component: rails_model
+# module: Client GUI
+# date: 2026-02-10
+# problem_type: env_var_issue
+# component: docker_config
 # symptoms:
-#   - N+1 query when loading email threads
-#   - Brief generation taking >5 seconds
-# root_cause: missing_include
-# rails_version: 7.1.2
-# resolution_type: code_fix
+#   - "VITE_SUPABASE_URL is undefined at runtime in Docker build"
+#   - "API calls fail silently with empty base URL"
+# root_cause: vite_env_not_in_all_three
+# resolution_type: env_var_fix
 # severity: high
-# tags: [n-plus-one, eager-loading, performance]
-# ---
-#
-# Example DX issue front matter:
-# ---
-# module: Development Workflow
-# date: 2025-11-13
-# problem_type: developer_experience
-# component: development_workflow
-# symptoms:
-#   - No example data for new feature in development
-#   - Rails db:seed doesn't demonstrate new capabilities
-# root_cause: incomplete_setup
-# rails_version: 7.1.2
-# resolution_type: seed_data_update
-# severity: low
-# tags: [seed-data, dx, workflow]
+# supabase_table: null
+# edge_function: null
+# linear_issue: CF-456
+# adr_reference: null
+# prd_reference: null
+# tags: [vite, env-var, docker, frontend]
 # ---

@@ -94,8 +94,11 @@ Based on problem type, optionally invoke specialized agents to review the docume
 - **performance_issue** → `performance-oracle`
 - **security_issue** → `security-sentinel`
 - **database_issue** → `data-integrity-guardian`
-- **test_failure** → `cora-test-reviewer`
-- Any code-heavy issue → `kieran-rails-reviewer` + `code-simplicity-reviewer`
+- **rls_policy_issue** → `supabase-reviewer`
+- **docker_config_issue** → `docker-infra-reviewer`
+- **env_var_issue** → `docker-infra-reviewer`
+- **workflow_issue** → `crossfunction-conventions-reviewer`
+- Any code-heavy issue → `kieran-typescript-reviewer` + `code-simplicity-reviewer`
 
 </parallel_tasks>
 
@@ -139,6 +142,11 @@ Based on problem type, optionally invoke specialized agents to review the docume
 - ui-bugs/
 - integration-issues/
 - logic-errors/
+- workflow-issues/
+- agent-issues/
+- configuration-issues/
+- developer-experience/
+- docker-issues/
 
 ## Common Mistakes to Avoid
 
@@ -162,9 +170,9 @@ Subagent Results:
 
 Specialized Agent Reviews (Auto-Triggered):
   ✓ performance-oracle: Validated query optimization approach
-  ✓ kieran-rails-reviewer: Code examples meet Rails standards
+  ✓ kieran-typescript-reviewer: Code examples meet TypeScript standards
   ✓ code-simplicity-reviewer: Solution is appropriately minimal
-  ✓ every-style-editor: Documentation style verified
+  ✓ crossfunction-conventions-reviewer: Project conventions verified
 
 File created:
 - docs/solutions/performance-issues/n-plus-one-brief-generation.md
@@ -214,20 +222,20 @@ Build → Test → Find Issue → Research → Improve → Document → Validate
 Based on problem type, these agents can enhance documentation:
 
 ### Code Quality & Review
-- **kieran-rails-reviewer**: Reviews code examples for Rails best practices
+- **kieran-typescript-reviewer**: Reviews code examples for TypeScript best practices
 - **code-simplicity-reviewer**: Ensures solution code is minimal and clear
 - **pattern-recognition-specialist**: Identifies anti-patterns or repeating issues
 
 ### Specific Domain Experts
 - **performance-oracle**: Analyzes performance_issue category solutions
 - **security-sentinel**: Reviews security_issue solutions for vulnerabilities
-- **cora-test-reviewer**: Creates test cases for prevention strategies
+- **supabase-reviewer**: Reviews Supabase RLS policies, Edge Functions, and schema alignment
 - **data-integrity-guardian**: Reviews database_issue migrations and queries
 
 ### Enhancement & Documentation
 - **best-practices-researcher**: Enriches solution with industry best practices
-- **every-style-editor**: Reviews documentation style and clarity
-- **framework-docs-researcher**: Links to Rails/gem documentation references
+- **crossfunction-conventions-reviewer**: Reviews documentation style and project conventions
+- **framework-docs-researcher**: Links to framework/library documentation references
 
 ### When to Invoke
 - **Auto-triggered** (optional): Agents can run post-documentation for enhancement
